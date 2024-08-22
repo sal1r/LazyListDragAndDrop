@@ -67,6 +67,7 @@ fun rememberLazyListDragAndDropState(): LazyListDragAndDropState = remember {
  * @param autoscrollSpeed speed of autoscroll in px per second
  * @param startAutoscrollBound start bound of autoscroll,
  * @param endAutoscrollBound end bound of autoscroll
+ * @param autoscrollEnabled enables or disables autoscroll
  */
 @Composable
 fun Modifier.dragAndDrop(
@@ -75,7 +76,8 @@ fun Modifier.dragAndDrop(
     onItemsOrderChanged: (lastIndex: Int, newIndex: Int) -> Unit,
     @FloatRange(from = 0.0) autoscrollSpeed: Float = 1500f,
     startAutoscrollBound: Float = 50f,
-    endAutoscrollBound: Float = -50f
+    endAutoscrollBound: Float = -50f,
+    autoscrollEnabled: Boolean = true
 ): Modifier {
     val context = LocalContext.current
     val fps = rememberSaveable {
@@ -129,6 +131,8 @@ fun Modifier.dragAndDrop(
     }
 
     LaunchedEffect(Unit) {
+        if (!autoscrollEnabled) return@LaunchedEffect
+
         var lastFrameRemains = 0f
         while (true) {
             measureTime {
