@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
                                 text = i.toString(),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(64.dp)
+                                    .height(if (i % 2 == 0) 96.dp else 64.dp)
                                     .zIndex(offset?.let { 1f } ?: 0f)
                                     .graphicsLayer {
                                         translationY = offset ?: 0f
@@ -89,10 +89,9 @@ class MainActivity : ComponentActivity() {
                                         scaleY = offset?.let { 1.1f } ?: 1f
                                     }
                                     .background(
-                                        color = if (i % 2 == 0) MaterialTheme.colorScheme.surfaceColorAtElevation(
-                                            3.dp
+                                        color = MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                            if (i % 2 == 0) 3.dp else 9.dp
                                         )
-                                        else MaterialTheme.colorScheme.surfaceColorAtElevation(9.dp)
                                     )
                                     .then(
                                         offset?.let {
