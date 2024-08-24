@@ -41,7 +41,8 @@ interface LazyListDragAndDropState {
 private class LazyListDragAndDropStateImpl(
     val _draggedItemIndex: MutableState<Int?>,
     val _draggedItemOffset: MutableState<Float?>,
-    val _position: MutableState<Float?>
+    val _position: MutableState<Float?>,
+    val _startIndex: MutableState<Int>,
 ) : LazyListDragAndDropState {
     override val draggedItemIndex: State<Int?> = _draggedItemIndex
     override val draggedItemOffset: State<Float?> = _draggedItemOffset
@@ -55,7 +56,8 @@ fun rememberLazyListDragAndDropState(): LazyListDragAndDropState = remember {
     LazyListDragAndDropStateImpl(
         _draggedItemIndex = mutableStateOf(null),
         _draggedItemOffset = mutableStateOf(null),
-        _position = mutableStateOf(null)
+        _position = mutableStateOf(null),
+        _startIndex = mutableStateOf(0),
     )
 }
 
@@ -64,6 +66,7 @@ fun rememberLazyListDragAndDropState(): LazyListDragAndDropState = remember {
  * @param lazyListState the state of current LazyList
  * @param dragAndDropState state of Drag&Drop. Used to get information about dragging
  * @param onItemsOrderChanged callback where you should reorder list used in LazyList
+ * @param onDragEnd callback when drag ends
  * @param autoscrollSpeed speed of autoscroll in px per second
  * @param startAutoscrollBound start bound of autoscroll,
  * @param endAutoscrollBound end bound of autoscroll
@@ -74,6 +77,7 @@ fun Modifier.dragAndDrop(
     lazyListState: LazyListState,
     dragAndDropState: LazyListDragAndDropState,
     onItemsOrderChanged: (lastIndex: Int, newIndex: Int) -> Unit,
+    onDragEnd: (startIndex: Int, endIndex: Int) -> Unit = { _, _ -> },
     @FloatRange(from = 0.0) autoscrollSpeed: Float = 1500f,
     startAutoscrollBound: Float = 50f,
     endAutoscrollBound: Float = -50f,
@@ -92,6 +96,7 @@ fun Modifier.dragAndDrop(
     var position by state._position
     var itemIndex by state._draggedItemIndex
     var itemOffset by state._draggedItemOffset
+    var startIndex by state._startIndex
 
     fun updateItemIndex(newPos: Float) {
         lazyListState.layoutInfo.visibleItemsInfo.let { visibleItemsInfo ->
@@ -107,13 +112,13 @@ fun Modifier.dragAndDrop(
                 if (lastIndex != newIndex) {
                     itemOffset = itemOffset?.plus(
                         (
-                            visibleItemsInfo[newIndex - fvii].size + (
-                                if (newIndex < lastIndex) ((lastIndex - fvii + 1)..<(newIndex - fvii))
-                                else ((newIndex - fvii + 1)..<(lastIndex - fvii))
-                            ).sumOf {
-                                visibleItemsInfo[it].size
-                            }
-                        ) * if (newIndex < lastIndex) 1f else -1f
+                                visibleItemsInfo[newIndex - fvii].size + (
+                                        if (newIndex < lastIndex) ((lastIndex - fvii + 1)..<(newIndex - fvii))
+                                        else ((newIndex - fvii + 1)..<(lastIndex - fvii))
+                                        ).sumOf {
+                                        visibleItemsInfo[it].size
+                                    }
+                                ) * if (newIndex < lastIndex) 1f else -1f
                     )
                 }
 
@@ -176,13 +181,16 @@ fun Modifier.dragAndDrop(
                         position = it.offset + it.size / 2f
                         itemOffset = 0f
                         itemIndex = it.index
+                        startIndex = it.index
                     }
             },
             onDragEnd = {
+                onDragEnd(startIndex, itemIndex!!)
                 position = null
                 itemIndex = null
             },
             onDragCancel = {
+                onDragEnd(startIndex, itemIndex!!)
                 position = null
                 itemIndex = null
             },
