@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -18,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
@@ -41,66 +43,65 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             DragAndDropTheme {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .statusBarsPadding()
-                        .navigationBarsPadding()
-                ) {
-                    val lazyListState = rememberLazyListState()
-                    val dragAndDropState = rememberLazyListDragAndDropState()
-                    var list by remember { mutableStateOf((0..100).toList()) }
+                Scaffold { innerPadding ->
+                    Surface(modifier = Modifier.padding(innerPadding)) {
+                        val lazyListState = rememberLazyListState()
+                        val dragAndDropState = rememberLazyListDragAndDropState()
+                        var list by remember { mutableStateOf((0..100).toList()) }
 
-                    LazyColumn(
-                        state = lazyListState,
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxSize()
-                            .dragAndDrop(
-                                lazyListState = lazyListState,
-                                dragAndDropState = dragAndDropState,
-                                onItemsOrderChanged = { lastIndex, newIndex ->
-                                    list = list
-                                        .toMutableList()
-                                        .apply {
-                                            this.add(newIndex, this.removeAt(lastIndex))
-                                        }
-                                }
-                            )
-                    ) {
-                        itemsIndexed(
-                            items = list,
-                            key = { _, i -> i }
-                        ) { idx, i ->
-                            val offset =
-                                if (idx == dragAndDropState.draggedItemIndex.value)
-                                    dragAndDropState.draggedItemOffset.value
-                                else null
-
-                            DnDListItem(
-                                text = i.toString(),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(if (i % 2 == 0) 96.dp else 64.dp)
-                                    .zIndex(offset?.let { 1f } ?: 0f)
-                                    .graphicsLayer {
-                                        translationY = offset ?: 0f
-                                        scaleX = offset?.let { 1.1f } ?: 1f
-                                        scaleY = offset?.let { 1.1f } ?: 1f
+                        LazyColumn(
+                            state = lazyListState,
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxSize()
+                                .dragAndDrop(
+                                    lazyListState = lazyListState,
+                                    dragAndDropState = dragAndDropState,
+                                    onItemsOrderChanged = { lastIndex, newIndex ->
+                                        list = list
+                                            .toMutableList()
+                                            .apply {
+                                                this.add(newIndex, this.removeAt(lastIndex))
+                                            }
                                     }
-                                    .background(
-                                        color = MaterialTheme.colorScheme.surfaceColorAtElevation(
-                                            if (i % 2 == 0) 3.dp else 9.dp
+                                )
+                        ) {
+                            itemsIndexed(
+                                items = list,
+                                key = { _, i -> i }
+                            ) { idx, i ->
+                                val offset = {
+                                    if (idx == dragAndDropState.draggedItemIndex.value)
+                                        dragAndDropState.draggedItemOffset.value
+                                    else null
+                                }
+                                val isDrugging = idx == dragAndDropState.draggedItemIndex.value
+
+                                DnDListItem(
+                                    text = i.toString(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(if (i % 2 == 0) 96.dp else 64.dp)
+                                        .zIndex(if (isDrugging) 1f else 0f)
+                                        .graphicsLayer {
+                                            val offset = offset()
+                                            translationY = offset ?: 0f
+                                            scaleX = offset?.let { 1.1f } ?: 1f
+                                            scaleY = offset?.let { 1.1f } ?: 1f
+                                        }
+                                        .background(
+                                            color = MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                                if (i % 2 == 0) 3.dp else 9.dp
+                                            )
                                         )
-                                    )
-                                    .then(
-                                        offset?.let {
-                                            Modifier
-                                        } ?: Modifier.animateItemPlacement(
-                                            animationSpec = tween(500)
+                                        .then(
+                                            if (isDrugging) Modifier
+                                            else Modifier.animateItemPlacement(
+                                                animationSpec = spring()
+                                            )
                                         )
-                                    )
-                            )
+                                )
+                            }
                         }
                     }
                 }
