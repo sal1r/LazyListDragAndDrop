@@ -5,16 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -75,14 +72,14 @@ class MainActivity : ComponentActivity() {
                                         dragAndDropState.draggedItemOffset.value
                                     else null
                                 }
-                                val isDrugging = idx == dragAndDropState.draggedItemIndex.value
+                                val isDragging = idx == dragAndDropState.draggedItemIndex.value
 
                                 DnDListItem(
                                     text = i.toString(),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(if (i % 2 == 0) 96.dp else 64.dp)
-                                        .zIndex(if (isDrugging) 1f else 0f)
+                                        .zIndex(if (isDragging) 1f else 0f)
                                         .graphicsLayer {
                                             val offset = offset()
                                             translationY = offset ?: 0f
@@ -95,7 +92,7 @@ class MainActivity : ComponentActivity() {
                                             )
                                         )
                                         .then(
-                                            if (isDrugging) Modifier
+                                            if (isDragging) Modifier
                                             else Modifier.animateItemPlacement(
                                                 animationSpec = spring()
                                             )
